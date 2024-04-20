@@ -3,6 +3,7 @@ plugins {
     id 'org.springframework.boot' version '3.2.4'
     id 'io.spring.dependency-management' version '1.1.4'
     id 'org.asciidoctor.jvm.convert' version '3.3.2'
+    id 'io.sentry.jvm.gradle' version '4.4.1'
 }
 
 group = 'shop.brandu'
@@ -26,6 +27,14 @@ ext {
     set('snippetsDir', file("build/generated-snippets"))
 }
 
+sentry {
+    includeSourceContext = true
+
+    org = "minjunsu"
+    projectName = "brandu"
+    authToken = System.getenv("SENTRY_AUTH_TOKEN")
+}
+
 dependencies {
     // Spring Boot 기본
     implementation 'org.springframework.boot:spring-boot-starter-web'
@@ -43,21 +52,24 @@ dependencies {
     // Spring Boot 캐시 데이터베이스
     implementation 'org.springframework.boot:spring-boot-starter-data-redis'
 
-
     // Spring Boot 개발 도구
     compileOnly 'org.projectlombok:lombok'
+    implementation 'org.springframework.boot:spring-boot-starter-actuator'
     annotationProcessor 'org.projectlombok:lombok'
     developmentOnly 'org.springframework.boot:spring-boot-devtools'
     annotationProcessor "org.springframework.boot:spring-boot-configuration-processor"
     implementation group: 'io.jsonwebtoken', name: 'jjwt-api', version: '0.11.2'
     runtimeOnly group: 'io.jsonwebtoken', name: 'jjwt-impl', version: '0.11.2'
     runtimeOnly group: 'io.jsonwebtoken', name: 'jjwt-jackson', version: '0.11.2'
+    implementation 'com.google.code.gson:gson:2.9.0'
 
     // Spring Rest Docs
     testImplementation 'org.springframework.restdocs:spring-restdocs-mockmvc'
 
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
     testImplementation 'org.springframework.security:spring-security-test'
+    testImplementation 'org.testcontainers:postgresql'
+    testImplementation "org.testcontainers:junit-jupiter:1.19.0"
 }
 
 tasks.named('test') {

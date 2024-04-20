@@ -1,5 +1,6 @@
 package shop.brandu.server.core.exception;
 
+import lombok.Getter;
 import org.springframework.validation.Errors;
 
 /**
@@ -9,6 +10,7 @@ import org.springframework.validation.Errors;
  * @fileName : BaseException
  * @since : 4/16/24
  */
+@Getter
 public class BranduException extends RuntimeException {
     private final ErrorCode errorCode;
     private Errors errors;

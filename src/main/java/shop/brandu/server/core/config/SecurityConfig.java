@@ -1,16 +1,18 @@
 package shop.brandu.server.core.config;
 
-import jakarta.servlet.Filter;
-import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
-import shop.brandu.server.core.filter.JwtFilter;
+import shop.brandu.server.core.filter.JwtAuthenticationFilter;
+import shop.brandu.server.domain.auth.handler.BranduAuthenticationDeniedHandler;
+import shop.brandu.server.domain.auth.handler.BranduAuthenticationEntryPoint;
 import shop.brandu.server.domain.auth.handler.OAuth2SuccessHandler;
 import shop.brandu.server.domain.auth.service.BranduOAuth2UserService;
 
@@ -18,9 +20,9 @@ import shop.brandu.server.domain.auth.service.BranduOAuth2UserService;
  * Spring Security 설정 클래스 <br/>
  *
  * @author : sunsuking
+ * @version : 1.0
  * @fileName : SecurityConfig
  * @since : 4/16/24
- * @version : 1.0
  */
 @RequiredArgsConstructor
 @EnableWebSecurity
@@ -28,6 +30,9 @@ import shop.brandu.server.domain.auth.service.BranduOAuth2UserService;
 public class SecurityConfig {
     private final BranduOAuth2UserService oAuth2UserService;
     private final OAuth2SuccessHandler successHandler;
+    private final JwtAuthenticationFilter jwtAuthenticationFilter;
+    private final BranduAuthenticationDeniedHandler branduAuthenticationDeniedHandler;
+    private final BranduAuthenticationEntryPoint branduAuthenticationEntryPoint;
 
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity security) throws Exception {
@@ -36,8 +41,12 @@ public class SecurityConfig {
                 .csrf(AbstractHttpConfigurer::disable)
                 .sessionManagement(AbstractHttpConfigurer::disable)
                 .exceptionHandling(configurer -> configurer
-                        .authenticationEntryPoint((request, response, authException) -> response.setStatus(HttpServletResponse.SC_UNAUTHORIZED))
-                        .accessDeniedHandler((request, response, accessDeniedException) -> response.setStatus(HttpServletResponse.SC_FORBIDDEN))
+                        .authenticationEntryPoint(branduAuthenticationEntryPoint)
+                        .accessDeniedHandler(branduAuthenticationDeniedHandler)
+                )
+                .authorizeHttpRequests(
+                        registry -> registry.requestMatchers("/api/v1/auth/**", "/actuator/**", "/h2-console", "/login").permitAll()
+                                .anyRequest().authenticated()
                 )
                 .oauth2Login(configurer -> configurer
                         .authorizationEndpoint(authorization -> authorization.baseUri("/oauth2/authorization"))
@@ -45,7 +54,12 @@ public class SecurityConfig {
                         .userInfoEndpoint(endPoint -> endPoint.userService(oAuth2UserService))
                         .successHandler(successHandler)
                 )
-//                .addFilterBefore(authenticationFilter, UsernamePasswordAuthenticationFilter.class)
+                .addFilterAfter(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
                 .build();
+    }
+
+    @Bean
+    public PasswordEncoder passwordEncoder() {
+        return new BCryptPasswordEncoder();
     }
 }

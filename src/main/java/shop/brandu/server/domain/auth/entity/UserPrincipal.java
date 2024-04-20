@@ -1,6 +1,7 @@
 package shop.brandu.server.domain.auth.entity;
 
 import lombok.AllArgsConstructor;
+import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -8,6 +9,7 @@ import org.springframework.security.oauth2.core.user.OAuth2User;
 import shop.brandu.server.domain.user.entity.User;
 
 import java.util.Collection;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -21,6 +23,7 @@ import java.util.Map;
 @RequiredArgsConstructor
 @AllArgsConstructor
 public class UserPrincipal implements UserDetails, OAuth2User {
+    @Getter
     private final transient User user;
     private transient Map<String, Object> attributes;
 
@@ -36,7 +39,7 @@ public class UserPrincipal implements UserDetails, OAuth2User {
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
-        return null;
+        return List.of(() -> user.getRoleType().name());
     }
 
     @Override

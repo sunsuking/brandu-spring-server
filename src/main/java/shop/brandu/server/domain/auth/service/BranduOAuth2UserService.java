@@ -12,8 +12,11 @@ import shop.brandu.server.domain.auth.attribute.OAuth2Attribute;
 import shop.brandu.server.domain.auth.attribute.OAuth2AttributeFactory;
 import shop.brandu.server.domain.auth.entity.ProviderType;
 import shop.brandu.server.domain.auth.entity.UserPrincipal;
+import shop.brandu.server.domain.auth.repository.TokenValidateRepository;
 import shop.brandu.server.domain.user.entity.User;
 import shop.brandu.server.domain.user.repository.UserRepository;
+
+import java.util.Optional;
 
 /**
  * 인증 관련 서비스 클래스 <br/>
@@ -38,7 +41,10 @@ public class BranduOAuth2UserService implements OAuth2UserService<OAuth2UserRequ
         log.debug("OAUTH2 기반의 로그인 요청 -> provider: {}, user: {}", provider, user);
 
         // * 해당 요청은 OAuth2 기반의 요청이기에 일치하는 사용자가 없다면 새로운 사용자를 생성한다.
-        User findUser = userRepository.findByUsername(user.getAttribute("email")).orElseGet(() -> User.createOAuthUser(attribute, provider));
+        log.debug("사용자 요청 이메일 정보: {}", Optional.ofNullable(user.getAttribute("email")));
+        log.debug("레포지토리에 저장된 사용자 정보: {}", userRepository.findByEmail(user.getAttribute("email")));
+        User findUser = userRepository.findByEmail(user.getAttribute("email"))
+                .orElseGet(() -> userRepository.save(User.createOAuthUser(attribute, provider)));
 
         // * 기존 인증 방식과 새로운 인증 방식이 다르다면 로그를 남긴다.
         if (findUser.getProviderType() != provider)  {

@@ -44,8 +44,7 @@ public class AuthController {
             @RequestBody @Validated SignUp signUp,
             HttpServletResponse response
     ) {
-        JwtToken token = authService.signUp(signUp);
-        response.addCookie(createCookie(token));
+        authService.signUp(signUp);
         return SuccessResponse.empty();
     }
 
@@ -59,6 +58,18 @@ public class AuthController {
             @RequestBody JwtToken token
     ) {
         authService.signOut(user, token);
+        return SuccessResponse.empty();
+    }
+
+    @GetMapping("/confirm")
+    @ResponseStatus(value = HttpStatus.OK)
+    public SuccessResponse<Void> confirm(
+            @RequestParam("email") String email,
+            @RequestParam("code") String code
+    ) {
+        if (!authService.confirm(email, code)) {
+            throw new IllegalArgumentException("인증 코드가 일치하지 않습니다.");
+        }
         return SuccessResponse.empty();
     }
 

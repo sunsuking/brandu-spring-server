@@ -8,7 +8,9 @@ import shop.brandu.server.domain.user.entity.User;
 public interface AuthService {
     JwtToken signIn(SignIn signIn);
 
-    JwtToken signUp(SignUp signUp);
+    void signUp(SignUp signUp);
 
     void signOut(User user, JwtToken token);
+
+    boolean confirm(String email, String code);
 }

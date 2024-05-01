@@ -21,8 +21,6 @@ import java.io.IOException;
 import java.util.Arrays;
 
 /**
- * Please explain the class!!
- *
  * @author : junsu
  * @fileName : AuthenticationFilter
  * @since : 4/17/24

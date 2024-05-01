@@ -63,6 +63,11 @@ dependencies {
     runtimeOnly group: 'io.jsonwebtoken', name: 'jjwt-jackson', version: '0.11.2'
     implementation 'com.google.code.gson:gson:2.9.0'
 
+    // Spring Boot SMTP & 템플릿용 Thymeleaf
+    implementation 'org.springframework.boot:spring-boot-starter-mail'
+    implementation 'org.springframework.boot:spring-boot-starter-thymeleaf'
+    implementation 'nz.net.ultraq.thymeleaf:thymeleaf-layout-dialect'
+
     // Spring Rest Docs
     testImplementation 'org.springframework.restdocs:spring-restdocs-mockmvc'
 

@@ -21,6 +21,7 @@ import java.time.Duration;
 @RequiredArgsConstructor
 @Transactional
 public class AuthServiceImpl implements AuthService {
+    private final EmailService emailService;
     private final UserRepository userRepository;
     private final JwtTokenService jwtTokenService;
     private final PasswordEncoder passwordEncoder;
@@ -44,7 +45,7 @@ public class AuthServiceImpl implements AuthService {
     }
 
     @Override
-    public JwtToken signUp(AuthData.SignUp signUp) {
+    public void signUp(AuthData.SignUp signUp) {
         if (existsByUsername(signUp.getUsername())) {
             throw new BranduException(ErrorCode.USER_ALREADY_EXISTS);
         }
@@ -52,8 +53,17 @@ public class AuthServiceImpl implements AuthService {
         // 비밀번호 암호화 추가
         signUp.setPassword(passwordEncoder.encode(signUp.getPassword()));
 
-        User user = userRepository.save(User.createLocalUser(signUp));
-        return jwtTokenService.generateTokenByLocal(user);
+        // 이메일 인증 코드 생성
+        String code = generateCode();
+        try {
+            emailService.sendSignUpEmail(signUp.getEmail(), signUp.getNickname(), code);
+            String key = CacheKey.emailCodeKey(signUp.getEmail());
+            if (Boolean.TRUE.equals(redisTemplate.hasKey(key))) throw new BranduException(ErrorCode.EMAIL_SEND_FAILED);
+            redisTemplate.opsForValue().set(key, code, Duration.ofMinutes(5));
+        } catch (Exception e) {
+            throw new BranduException(ErrorCode.EMAIL_SEND_FAILED);
+        }
+        userRepository.save(User.createLocalUser(signUp));
     }
 
     @Transactional(readOnly = true)
@@ -65,8 +75,23 @@ public class AuthServiceImpl implements AuthService {
         redisTemplate.expire(key, Duration.ofMillis(authProperties.getRefreshTokenExpiry()));
     }
 
+    @Override
+    public boolean confirm(String email, String code) {
+        String key = CacheKey.emailCodeKey(email);
+        if (code.equals(redisTemplate.opsForValue().get(key))) {
+            userRepository.findByEmail(email).ifPresent(User::confirmEmail);
+            redisTemplate.delete(key);
+            return true;
+        }
+        return false;
+    }
+
 
     private boolean existsByUsername(String username) {
         return userRepository.existsByUsername(username);
+    }
+
+    private String generateCode() {
+        return String.valueOf((int) (Math.random() * 900000) + 100000);
     }
 }

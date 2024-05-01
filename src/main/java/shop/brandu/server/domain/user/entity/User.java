@@ -87,4 +87,8 @@ public class User extends BaseEntity {
         user.roleType = RoleType.USER;
         return user;
     }
+
+    public void confirmEmail() {
+        this.isEmailVerified = true;
+    }
 }

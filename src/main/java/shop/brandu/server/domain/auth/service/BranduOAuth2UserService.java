@@ -12,7 +12,6 @@ import shop.brandu.server.domain.auth.attribute.OAuth2Attribute;
 import shop.brandu.server.domain.auth.attribute.OAuth2AttributeFactory;
 import shop.brandu.server.domain.auth.entity.ProviderType;
 import shop.brandu.server.domain.auth.entity.UserPrincipal;
-import shop.brandu.server.domain.auth.repository.TokenValidateRepository;
 import shop.brandu.server.domain.user.entity.User;
 import shop.brandu.server.domain.user.repository.UserRepository;
 
@@ -47,7 +46,7 @@ public class BranduOAuth2UserService implements OAuth2UserService<OAuth2UserRequ
                 .orElseGet(() -> userRepository.save(User.createOAuthUser(attribute, provider)));
 
         // * 기존 인증 방식과 새로운 인증 방식이 다르다면 로그를 남긴다.
-        if (findUser.getProviderType() != provider)  {
+        if (findUser.getProviderType() != provider) {
             log.debug("기존 인증 방식: {}, 새로운 인증 방식: {}", findUser.getProviderType(), provider);
         }
 

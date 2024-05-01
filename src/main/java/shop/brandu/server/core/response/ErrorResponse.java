@@ -22,4 +22,16 @@ public class ErrorResponse extends BaseResponse<Void> {
     public ErrorResponse(BranduException exception, String message) {
         this(false, exception.getErrorCode().getCode(), message, null);
     }
+
+    public static ErrorResponse of(BranduException exception) {
+        return new ErrorResponse(exception);
+    }
+
+    public static ErrorResponse of(BranduException exception, String message) {
+        return new ErrorResponse(exception, message);
+    }
+
+    public static ErrorResponse of(Exception exception) {
+        return new ErrorResponse(false, 500, exception.getMessage(), null);
+    }
 }

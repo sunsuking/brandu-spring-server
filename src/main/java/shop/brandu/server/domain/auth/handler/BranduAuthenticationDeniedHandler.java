@@ -1,6 +1,5 @@
 package shop.brandu.server.domain.auth.handler;
 
-import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.security.access.AccessDeniedException;
@@ -15,7 +14,7 @@ import java.io.IOException;
 @Component
 public class BranduAuthenticationDeniedHandler implements AccessDeniedHandler {
     @Override
-    public void handle(HttpServletRequest request, HttpServletResponse response, AccessDeniedException accessDeniedException) throws IOException, ServletException {
+    public void handle(HttpServletRequest request, HttpServletResponse response, AccessDeniedException accessDeniedException) throws IOException {
         response.setStatus(HttpServletResponse.SC_FORBIDDEN);
         BranduException exception = new BranduException(ErrorCode.ACCESS_DENIED);
         ErrorResponse errorResponse = new ErrorResponse(exception, request.getAttribute("error-message").toString());

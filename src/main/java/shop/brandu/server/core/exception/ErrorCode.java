@@ -22,7 +22,7 @@ public enum ErrorCode {
     ACCESS_DENIED(HttpStatus.FORBIDDEN, 2001, "접근 권한이 없습니다."),
     NOT_SUPPORTED_PROVIDER(HttpStatus.BAD_REQUEST, 2002, "지원하지 않는 소셜 로그인 제공자입니다."),
     USER_NOT_FOUND(HttpStatus.NOT_FOUND, 2003, "사용자를 찾을 수 없습니다."),
-
+    USER_ALREADY_EXISTS(HttpStatus.BAD_REQUEST, 2004, "이미 존재하는 사용자입니다."),
     ;
     private final HttpStatus status;
     private final int code;

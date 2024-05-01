@@ -9,15 +9,16 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 import shop.brandu.server.core.properties.AuthProperties;
 import shop.brandu.server.domain.auth.dto.AuthData.JwtToken;
 import shop.brandu.server.domain.auth.entity.UserPrincipal;
+import shop.brandu.server.domain.user.entity.User;
 
 import java.security.Key;
-import java.util.Date;
-import java.util.Map;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -45,26 +46,36 @@ public class JwtTokenService {
      * @return JWT 토큰
      */
     public JwtToken generateTokenByOAuth2(UserPrincipal principal) {
-        String authorities = principal.getAuthorities().stream()
+        return generateToken(principal.getUser().getId(), principal.getUsername(), principal.getAuthorities());
+    }
+
+    public JwtToken generateTokenByLocal(User user) {
+        Collection<GrantedAuthority> authorities = List.of(new SimpleGrantedAuthority(user.getRoleType().name()));
+        return generateToken(user.getId(), user.getUsername(), authorities);
+    }
+
+    private JwtToken generateToken(Long userId, String username, Collection<? extends GrantedAuthority> authorities) {
+        String authority = authorities.stream()
                 .map(GrantedAuthority::getAuthority)
                 .collect(Collectors.joining(","));
 
         long now = System.currentTimeMillis();
 
-        Date accessTokenExpire = new Date(now);
+        Date accessTokenExpire = new Date(now + authProperties.getTokenExpiry());
         Date refreshTokenExpire = new Date(now + authProperties.getRefreshTokenExpiry());
 
         String accessToken = Jwts.builder()
                 .setHeader(createHeader())
-                .claim("authorities", authorities)
-                .setSubject(principal.getUsername())
+                .setSubject(username)
+                .claim("userId", userId)
+                .claim("authorities", authority)
                 .setIssuedAt(new Date(now))
                 .setExpiration(accessTokenExpire)
                 .signWith(key, SignatureAlgorithm.HS256)
                 .compact();
 
         String refreshToken = Jwts.builder()
-                .setSubject(principal.getUsername())
+                .setSubject(username)
                 .setIssuedAt(new Date(now))
                 .setExpiration(refreshTokenExpire)
                 .signWith(key, SignatureAlgorithm.HS256)
@@ -83,10 +94,13 @@ public class JwtTokenService {
     public Authentication parseAuthentication(String accessToken) throws Exception {
         Claims claims = parseClaims(accessToken);
 
-        assert claims != null;
-        UserDetails principal = userPrincipalService.loadUserByUsername(claims.getSubject());
+        Collection<? extends GrantedAuthority> authorities =
+                Arrays.stream(claims.get("authorities").toString().split(","))
+                        .map(SimpleGrantedAuthority::new)
+                        .toList();
 
-        return new UsernamePasswordAuthenticationToken(principal, "", principal.getAuthorities());
+        UserDetails principal = new org.springframework.security.core.userdetails.User(claims.getSubject(), "", authorities);
+        return new UsernamePasswordAuthenticationToken(principal, "", authorities);
     }
 
     /**

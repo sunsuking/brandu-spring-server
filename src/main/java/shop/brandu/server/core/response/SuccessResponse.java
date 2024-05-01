@@ -4,10 +4,9 @@ import io.netty.channel.unix.Errors;
 import net.minidev.json.annotate.JsonIgnore;
 
 public class SuccessResponse<T> extends BaseResponse<T> {
+    private final static SuccessResponse<Void> EMPTY = new SuccessResponse<>();
     @JsonIgnore
     protected Errors errors;
-
-    private final static SuccessResponse<Void> EMPTY = new SuccessResponse<>();
 
     public SuccessResponse() {
         super(true, 200, "success");
@@ -21,5 +20,9 @@ public class SuccessResponse<T> extends BaseResponse<T> {
 
     public static SuccessResponse<Void> empty() {
         return EMPTY;
+    }
+
+    public static <T> SuccessResponse<T> of(T data) {
+        return new SuccessResponse<>(data);
     }
 }

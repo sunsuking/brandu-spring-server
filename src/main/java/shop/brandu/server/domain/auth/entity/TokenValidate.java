@@ -4,16 +4,22 @@ import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import org.springframework.data.annotation.Id;
-import org.springframework.data.redis.core.RedisHash;
+
+import java.util.Map;
 
 @Getter
-@RedisHash(value = "refresh_token", timeToLive = 60 * 60 * 24 * 3)
 @AllArgsConstructor(staticName = "of")
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class TokenValidate {
-    @Id
-    private Long userId;
+    private String username;
     private String accessToken;
     private String refreshToken;
+
+    public static TokenValidate fromMap(Map<Object, Object> map) {
+        return TokenValidate.of(map.get("userId").toString(), map.get("accessToken").toString(), map.get("refreshToken").toString());
+    }
+
+    public Map<String, String> toMap() {
+        return Map.of("userId", username, "accessToken", accessToken, "refreshToken", refreshToken);
+    }
 }

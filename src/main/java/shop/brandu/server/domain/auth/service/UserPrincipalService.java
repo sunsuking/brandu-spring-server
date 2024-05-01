@@ -19,7 +19,7 @@ public class UserPrincipalService implements UserDetailsService {
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
         User user = userRepository.findByUsername(username).orElseThrow(
-            () -> new BranduException(ErrorCode.USER_NOT_FOUND)
+                () -> new BranduException(ErrorCode.USER_NOT_FOUND)
         );
         return new UserPrincipal(user);
     }

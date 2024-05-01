@@ -17,6 +17,9 @@ public class BranduAuthenticationEntryPoint implements AuthenticationEntryPoint 
     public void commence(HttpServletRequest request, HttpServletResponse response, AuthenticationException authException) throws IOException {
         response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
         BranduException exception = new BranduException(ErrorCode.INVALID_TOKEN);
+        if (request.getAttribute("error-message") == null) {
+            request.setAttribute("error-message", exception.getMessage());
+        }
         ErrorResponse errorResponse = new ErrorResponse(exception, request.getAttribute("error-message").toString());
         response.setContentType("application/json;charset=UTF-8");
         response.getWriter().write(errorResponse.toJson());

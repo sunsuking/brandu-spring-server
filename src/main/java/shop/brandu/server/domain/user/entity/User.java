@@ -4,9 +4,11 @@ import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.ToString;
 import org.hibernate.annotations.ColumnDefault;
 import shop.brandu.server.core.entity.BaseEntity;
 import shop.brandu.server.domain.auth.attribute.OAuth2Attribute;
+import shop.brandu.server.domain.auth.dto.AuthData;
 import shop.brandu.server.domain.auth.entity.ProviderType;
 
 /**
@@ -19,13 +21,14 @@ import shop.brandu.server.domain.auth.entity.ProviderType;
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Table(
-    name = "users",
-    uniqueConstraints = {
-        @UniqueConstraint(name = "unique_users_username", columnNames = {"username"}),
-        @UniqueConstraint(name = "unique_users_email", columnNames = {"email"})
-    }
+        name = "users",
+        uniqueConstraints = {
+                @UniqueConstraint(name = "unique_users_username", columnNames = {"username"}),
+                @UniqueConstraint(name = "unique_users_email", columnNames = {"email"})
+        }
 )
 @Entity
+@ToString
 public class User extends BaseEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -39,6 +42,12 @@ public class User extends BaseEntity {
 
     @Column(nullable = false)
     private String password;
+
+    private String nickname;
+
+    private String profileImage;
+
+    private String phoneNumber;
 
     @Column(nullable = false)
     @Enumerated(EnumType.STRING)
@@ -59,10 +68,22 @@ public class User extends BaseEntity {
 
     public static User createOAuthUser(OAuth2Attribute attribute, ProviderType provider) {
         User user = new User();
-        user.username = attribute.getName();
+        user.username = attribute.getEmail();
         user.password = "password";
+        user.nickname = attribute.getName();
+        user.profileImage = attribute.getImageUrl();
         user.email = attribute.getEmail();
         user.providerType = provider;
+        user.roleType = RoleType.USER;
+        return user;
+    }
+
+    public static User createLocalUser(AuthData.SignUp signUp) {
+        User user = new User();
+        user.username = signUp.getUsername();
+        user.email = signUp.getEmail();
+        user.password = signUp.getPassword();
+        user.providerType = ProviderType.LOCAL;
         user.roleType = RoleType.USER;
         return user;
     }

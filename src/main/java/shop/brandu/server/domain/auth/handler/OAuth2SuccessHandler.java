@@ -12,9 +12,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.util.UriComponentsBuilder;
 import shop.brandu.server.core.properties.AuthProperties;
 import shop.brandu.server.domain.auth.dto.AuthData.JwtToken;
-import shop.brandu.server.domain.auth.entity.TokenValidate;
 import shop.brandu.server.domain.auth.entity.UserPrincipal;
-import shop.brandu.server.domain.auth.repository.TokenValidateRepository;
 import shop.brandu.server.domain.auth.service.JwtTokenService;
 
 import java.io.IOException;
@@ -32,13 +30,11 @@ import java.io.IOException;
 public class OAuth2SuccessHandler extends SimpleUrlAuthenticationSuccessHandler {
     private final AuthProperties authProperties;
     private final JwtTokenService jwtTokenService;
-    private final TokenValidateRepository tokenValidateRepository;
 
     @Override
     public void onAuthenticationSuccess(HttpServletRequest request, HttpServletResponse response, Authentication authentication) throws IOException, ServletException {
         UserPrincipal principal = (UserPrincipal) authentication.getPrincipal();
         JwtToken token = jwtTokenService.generateTokenByOAuth2(principal);
-        saveToken(token, principal);
 
         log.debug("신규 토큰 발급 완료: {}", token.getAccessToken());
 
@@ -53,11 +49,6 @@ public class OAuth2SuccessHandler extends SimpleUrlAuthenticationSuccessHandler 
         getRedirectStrategy().sendRedirect(request, response, redirectUrl);
 
         super.onAuthenticationSuccess(request, response, authentication);
-    }
-
-    private void saveToken(JwtToken token, UserPrincipal principal) {
-        TokenValidate tokenValidate = tokenValidateRepository.save(TokenValidate.of(principal.getUser().getId(), token.getAccessToken(), token.getRefreshToken()));
-        log.debug("토큰 저장: {}", tokenValidate);
     }
 
     private Cookie createCookie(JwtToken token) {

@@ -42,19 +42,60 @@ public class JwtTokenService {
     /**
      * OAuth2 인증을 통해 토큰 생성
      *
-     * @param principal principal
+     * @param principal {@link UserPrincipal}
      * @return JWT 토큰
      */
     public JwtToken generateTokenByOAuth2(UserPrincipal principal) {
-        return generateToken(principal.getUser().getId(), principal.getUsername(), principal.getAuthorities());
+        return generateToken(principal.getUsername(), principal.getAuthorities());
     }
 
+    /**
+     * 로컬 인증을 통해 토큰 생성
+     *
+     * @param user {@link User}
+     * @return JWT 토큰
+     */
     public JwtToken generateTokenByLocal(User user) {
         Collection<GrantedAuthority> authorities = List.of(new SimpleGrantedAuthority(user.getRoleType().name()));
-        return generateToken(user.getId(), user.getUsername(), authorities);
+        return generateToken(user.getUsername(), authorities);
     }
 
-    private JwtToken generateToken(Long userId, String username, Collection<? extends GrantedAuthority> authorities) {
+    /**
+     * refreshToken을 통해 토큰 생성
+     *
+     * @param refreshToken 리프레시 토큰
+     * @return JWT 토큰
+     */
+    public JwtToken generateTokenByRefreshToken(String refreshToken) throws Exception {
+        boolean isValidated = validateToken(refreshToken);
+        if (isValidated) {
+            Claims claims = parseClaims(refreshToken);
+            String username = claims.getSubject();
+            Collection<? extends GrantedAuthority> authorities = List.of(new SimpleGrantedAuthority(claims.get("authorities").toString()));
+            return generateToken(username, authorities);
+        }
+        throw new Exception("유효하지 않은 토큰입니다.");
+    }
+
+    /**
+     * token을 통해 사용자 이름 반환
+     *
+     * @param token JWT 토큰
+     * @return 사용자 이름
+     */
+    public String getUsername(String token) throws Exception {
+        Claims claims = parseClaims(token);
+        return claims.getSubject();
+    }
+
+    /**
+     * 토큰 생성
+     *
+     * @param username    사용자 이름
+     * @param authorities 권한
+     * @return JWT 토큰
+     */
+    private JwtToken generateToken(String username, Collection<? extends GrantedAuthority> authorities) {
         String authority = authorities.stream()
                 .map(GrantedAuthority::getAuthority)
                 .collect(Collectors.joining(","));
@@ -67,7 +108,6 @@ public class JwtTokenService {
         String accessToken = Jwts.builder()
                 .setHeader(createHeader())
                 .setSubject(username)
-                .claim("userId", userId)
                 .claim("authorities", authority)
                 .setIssuedAt(new Date(now))
                 .setExpiration(accessTokenExpire)
@@ -76,6 +116,7 @@ public class JwtTokenService {
 
         String refreshToken = Jwts.builder()
                 .setSubject(username)
+                .claim("authorities", authority)
                 .setIssuedAt(new Date(now))
                 .setExpiration(refreshTokenExpire)
                 .signWith(key, SignatureAlgorithm.HS256)

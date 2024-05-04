@@ -5,7 +5,11 @@ public class CacheKey {
         return "authentication#" + username;
     }
 
-    public static String emailCodeKey(String email) {
+    public static String emailConfirmCodeKey(String email) {
         return "emailConfirmCode#" + email;
+    }
+
+    public static String findPasswordCodeKey(String email) {
+        return "findPasswordCodeKey#" + email;
     }
 }

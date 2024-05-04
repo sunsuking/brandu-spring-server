@@ -14,11 +14,14 @@ import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 import org.springframework.web.filter.OncePerRequestFilter;
 import shop.brandu.server.core.cache.CacheKey;
+import shop.brandu.server.core.exception.BranduException;
+import shop.brandu.server.core.exception.ErrorCode;
 import shop.brandu.server.domain.auth.entity.TokenValidate;
 import shop.brandu.server.domain.auth.service.JwtTokenService;
 
 import java.io.IOException;
 import java.util.Arrays;
+import java.util.Map;
 
 /**
  * @author : junsu
@@ -39,7 +42,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         try {
             if (StringUtils.hasText(accessToken) && jwtTokenService.validateToken(accessToken)) {
                 Authentication authentication = jwtTokenService.parseAuthentication(accessToken);
-                validateToken(request, authentication, accessToken);
+                validateToken(request, authentication);
                 SecurityContextHolder.getContext().setAuthentication(authentication);
                 log.debug("Security Context에 '{}' 인증 정보를 저장했습니다", authentication.getName());
             } else {
@@ -52,15 +55,16 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         doFilter(request, response, filterChain);
     }
 
-    private void validateToken(HttpServletRequest request, Authentication authentication, String accessToken) {
+    private void validateToken(HttpServletRequest request, Authentication authentication) {
         String key = CacheKey.authenticationKey(authentication.getName());
-        TokenValidate validate = TokenValidate.fromMap(redisTemplate.opsForHash().entries(key));
-        Arrays.stream(request.getCookies()).filter(cookie -> cookie.getName().equals("refreshToken")).findFirst().ifPresent(cookie -> {
-            if (validate.getRefreshToken().equals(cookie.getValue()))
-                throw new JwtException("이미 로그아웃된 유저입니다.");
-        });
-        if (validate.getAccessToken().equals(accessToken))
-            throw new JwtException("이미 로그아웃된 유저입니다.");
+        Map<Object, Object> entries = redisTemplate.opsForHash().entries(key);
+        if (!entries.isEmpty()) {
+            TokenValidate validate = TokenValidate.fromMap(entries);
+            Arrays.stream(request.getCookies()).filter(cookie -> cookie.getName().equals("refreshToken")).findFirst().ifPresent(cookie -> {
+                if (validate.getRefreshToken().equals(cookie.getValue()))
+                    throw new BranduException(ErrorCode.USER_ALREADY_SIGN_OUT);
+            });
+        }
     }
 
     private String resolveToken(HttpServletRequest request) {

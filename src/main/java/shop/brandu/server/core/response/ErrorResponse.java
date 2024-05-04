@@ -16,7 +16,7 @@ public class ErrorResponse extends BaseResponse<Void> {
     }
 
     public ErrorResponse(BranduException exception) {
-        this(false, exception.getErrorCode().getCode(), exception.getErrorCode().getMessage(), new SimpleErrors("error", exception.getMessage()));
+        this(false, exception.getErrorCode().getCode(), exception.getMessage(), new SimpleErrors("error", exception.getMessage()));
     }
 
     public ErrorResponse(BranduException exception, String message) {

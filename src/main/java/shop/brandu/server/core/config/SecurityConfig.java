@@ -34,6 +34,14 @@ public class SecurityConfig {
     private final BranduAuthenticationDeniedHandler branduAuthenticationDeniedHandler;
     private final BranduAuthenticationEntryPoint branduAuthenticationEntryPoint;
 
+    private final String[] permitAll = {
+            "/api/v1/auth/sign-in",
+            "/api/v1/auth/sign-up",
+            "/api/v1/auth/confirm",
+            "/api/v1/auth/resend-email",
+            "/actuator/**",
+            "/h2-console/**"
+    };
 
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity security) throws Exception {
@@ -46,7 +54,7 @@ public class SecurityConfig {
                         .accessDeniedHandler(branduAuthenticationDeniedHandler)
                 )
                 .authorizeHttpRequests(
-                        registry -> registry.requestMatchers("/api/v1/auth/sign-in", "/api/v1/auth/sign-up", "/api/v1/auth/confirm", "/actuator/**", "/h2-console/**").permitAll()
+                        registry -> registry.requestMatchers(permitAll).permitAll()
                                 .anyRequest().authenticated()
                 )
                 .oauth2Login(configurer -> configurer

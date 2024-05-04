@@ -10,7 +10,13 @@ public interface AuthService {
 
     void signUp(SignUp signUp);
 
-    void signOut(User user, JwtToken token);
+    void signOut(User user, String refreshToken);
 
-    boolean confirm(String email, String code);
+    boolean confirm(String type, String email, String code);
+
+    void findPassword(String email);
+
+    void resendEmail(String email, String type);
+
+    JwtToken refresh(String refreshToken);
 }

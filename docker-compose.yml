@@ -2,35 +2,46 @@ name: brandu-docker-compose
 version: "3.9"
 
 services:
-    db:
-        image: postgres:15
-        volumes:
-        - postgres_data:/var/lib/postgresql/data
-        ports:
-          - "5432:5432"
-        environment:
-          - POSTGRES_DB=brandu
-          - POSTGRES_USER=postgres
-          - POSTGRES_PASSWORD=postgres
-        networks:
-            - brandu_network
+  db:
+    image: postgres:15
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    environment:
+      - POSTGRES_DB=brandu
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+    networks:
+      - brandu_network
 
-    cache:
-        image: redis:5.0.7-alpine
-        ports:
-          - "6379:6379"
-        environment:
-          - REDIS_DATABASES=1
-          - REDIS_MAXMEMORY=128mb
-        volumes:
-          - redis_data:/data
-        networks:
-            - brandu_network
+  cache:
+    image: redis:5.0.7-alpine
+    ports:
+      - "6379:6379"
+    environment:
+      - REDIS_DATABASES=1
+      - REDIS_MAXMEMORY=128mb
+    volumes:
+      - redis_data:/data
+    networks:
+      - brandu_network
+
+  swagger:
+    image: swaggerapi/swagger-ui
+    ports:
+      - "8000:8080"
+    environment:
+      - SWAGGER_JSON=/api-docs/swagger.json
+      - URLS_PRIMARY_NAME=Brandu API
+      - URLS_PRIMARY_URL=http://localhost:8000/api-docs/swagger.json
+    networks:
+      - brandu_network
 
 volumes:
-    postgres_data:
-    redis_data:
+  postgres_data:
+  redis_data:
 
 networks:
-    brandu_network:
-      driver: bridge
+  brandu_network:
+    driver: bridge

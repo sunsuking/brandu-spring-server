@@ -1,5 +1,6 @@
 package shop.brandu.server.domain.auth.service;
 
+import shop.brandu.server.domain.auth.dto.AuthData.Confirm;
 import shop.brandu.server.domain.auth.dto.AuthData.JwtToken;
 import shop.brandu.server.domain.auth.dto.AuthData.SignIn;
 import shop.brandu.server.domain.auth.dto.AuthData.SignUp;
@@ -12,7 +13,7 @@ public interface AuthService {
 
     void signOut(User user, String refreshToken);
 
-    boolean confirm(String type, String email, String code);
+    boolean confirm(Confirm confirm);
 
     void findPassword(String email);
 

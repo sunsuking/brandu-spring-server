@@ -33,6 +33,7 @@ public class AuthData {
     }
 
     @Data
+    @AllArgsConstructor(staticName = "of")
     public static class SignUp {
         @Email(message = "이메일 형식이 아닙니다.")
         @NotBlank(message = "이메일을 입력해주세요.")
@@ -50,6 +51,18 @@ public class AuthData {
     @Data
     public static class FindPassword {
         @Email(message = "이메일 형식이 아닙니다.")
+        @NotBlank(message = "이메일을 입력해주세요.")
+        private String email;
+    }
+
+    @Data
+    public static class Confirm {
+        @NotBlank(message = "타입을 입력해주세요.")
+        private String type;
+
+        @NotBlank(message = "인증 코드를 입력해주세요.")
+        private String code;
+
         @NotBlank(message = "이메일을 입력해주세요.")
         private String email;
     }

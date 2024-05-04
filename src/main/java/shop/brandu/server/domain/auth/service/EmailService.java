@@ -35,7 +35,7 @@ public class EmailService {
         String html = templateEngine.process("mail/confirm_member_account_mail", context);
         helper.setText(html, true);
 
-        sendEmail(message);
+        sendEmail(message, to);
     }
 
     public void sendFindPasswordEmail(String to, String code) throws MessagingException {
@@ -51,13 +51,14 @@ public class EmailService {
         String html = templateEngine.process("mail/find_member_account_mail", context);
         helper.setText(html, true);
 
-        sendEmail(message);
+        sendEmail(message, to);
     }
 
-    private void sendEmail(MimeMessage message) {
+    private void sendEmail(MimeMessage message, String to) {
         new Thread(() -> {
             try {
                 javaMailSender.send(message);
+                log.info("{} 으로 이메일 전송에 성공했습니다.", to);
             } catch (Exception e) {
                 log.error("이메일 전송에 실패했습니다. 다시 시도해주세요.", e);
             }

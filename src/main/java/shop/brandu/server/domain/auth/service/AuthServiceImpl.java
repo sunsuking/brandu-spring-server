@@ -9,14 +9,15 @@ import shop.brandu.server.core.cache.CacheKey;
 import shop.brandu.server.core.exception.BranduException;
 import shop.brandu.server.core.exception.ErrorCode;
 import shop.brandu.server.core.properties.AuthProperties;
-import shop.brandu.server.domain.auth.dto.AuthData;
-import shop.brandu.server.domain.auth.dto.AuthData.JwtToken;
+import shop.brandu.server.domain.auth.dto.AuthData.*;
 import shop.brandu.server.domain.auth.entity.TokenValidate;
 import shop.brandu.server.domain.user.entity.User;
 import shop.brandu.server.domain.user.repository.UserRepository;
 
 import java.time.Duration;
 import java.util.Objects;
+
+import static shop.brandu.server.domain.auth.dto.AuthData.*;
 
 @Service
 @RequiredArgsConstructor
@@ -32,12 +33,12 @@ public class AuthServiceImpl implements AuthService {
     /**
      * 로컬 사용자 로그인
      *
-     * @param signIn {@link AuthData.SignIn}
+     * @param signIn {@link SignIn}
      * @return {@link JwtToken}
      */
     @Transactional(readOnly = true)
     @Override
-    public JwtToken signIn(AuthData.SignIn signIn) {
+    public JwtToken signIn(SignIn signIn) {
         // * 사용자 아이디 기반으로 사용자 정보 조회
         User user = userRepository.findByUsername(signIn.getUsername()).orElseThrow(
                 () -> new BranduException(ErrorCode.USER_NOT_MATCH)
@@ -66,10 +67,10 @@ public class AuthServiceImpl implements AuthService {
     /**
      * 신규 회원가입
      *
-     * @param signUp {@link AuthData.SignUp}
+     * @param signUp {@link SignUp}
      */
     @Override
-    public void signUp(AuthData.SignUp signUp) {
+    public void signUp(SignUp signUp) {
         if (existsByUsername(signUp.getUsername())) {
             throw new BranduException(ErrorCode.USER_ALREADY_EXISTS);
         }
@@ -114,16 +115,16 @@ public class AuthServiceImpl implements AuthService {
      * @return 성공 여부
      */
     @Override
-    public boolean confirm(String type, String email, String code) {
+    public boolean confirm(Confirm confirm) {
         String key;
-        switch (type) {
-            case "sign-up" -> key = CacheKey.emailConfirmCodeKey(email);
-            case "find-password" -> key = CacheKey.findPasswordCodeKey(email);
+        switch (confirm.getType()) {
+            case "sign-up" -> key = CacheKey.emailConfirmCodeKey(confirm.getEmail());
+            case "find-password" -> key = CacheKey.findPasswordCodeKey(confirm.getEmail());
             default -> throw new BranduException(ErrorCode.INVALID_INPUT_VALUE);
         }
 
-        if (code.equals(redisTemplate.opsForValue().get(key))) {
-            userRepository.findByEmail(email).ifPresent(User::confirmEmail);
+        if (confirm.getCode().equals(redisTemplate.opsForValue().get(key))) {
+            userRepository.findByEmail(confirm.getEmail()).ifPresent(User::confirmEmail);
             redisTemplate.delete(key);
             return true;
         }

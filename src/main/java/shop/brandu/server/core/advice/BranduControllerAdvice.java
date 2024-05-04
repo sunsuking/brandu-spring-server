@@ -18,12 +18,14 @@ public class BranduControllerAdvice {
     @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
     @ResponseBody
     public ErrorResponse handleException(Exception exception) {
+//        exception.printStackTrace();
         log.error("Exception: {}", exception.getMessage());
         return ErrorResponse.of(exception);
     }
 
     @ExceptionHandler(BranduException.class)
     public ResponseEntity<ErrorResponse> handleBranduException(BranduException exception) {
+        exception.printStackTrace();
         log.error("BranduException: {}", exception.getMessage());
         return ResponseEntity.status(exception.getErrorCode().getStatus())
                 .body(ErrorResponse.of(exception));

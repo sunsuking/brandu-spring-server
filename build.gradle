@@ -1,10 +1,18 @@
+buildscript {
+    ext {
+        restdocsApiSpecVersion = '0.18.2'
+    }
+}
+
 plugins {
     id 'java'
     id 'org.springframework.boot' version '3.2.4'
     id 'io.spring.dependency-management' version '1.1.4'
     id 'org.asciidoctor.jvm.convert' version '3.3.2'
     id 'io.sentry.jvm.gradle' version '4.4.1'
+    id 'com.epages.restdocs-api-spec' version "${restdocsApiSpecVersion}"
 }
+
 
 group = 'shop.brandu'
 version = '0.0.1-SNAPSHOT'
@@ -23,16 +31,20 @@ repositories {
     mavenCentral()
 }
 
-ext {
-    set('snippetsDir', file("build/generated-snippets"))
-}
-
 sentry {
     includeSourceContext = true
 
     org = "minjunsu"
     projectName = "brandu"
     authToken = System.getenv("SENTRY_AUTH_TOKEN")
+}
+
+openapi3 {
+    server = 'https://localhost:8080'
+    title = 'Brandu API Documentation'
+    description = '브랜뉴 API 문서입니다.'
+    version = '0.1.0'
+    format = 'yaml'
 }
 
 dependencies {
@@ -68,8 +80,10 @@ dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-thymeleaf'
     implementation 'nz.net.ultraq.thymeleaf:thymeleaf-layout-dialect'
 
-    // Spring Rest Docs
-    testImplementation 'org.springframework.restdocs:spring-restdocs-mockmvc'
+    // Spring Rest Docs + OpenAPI 3.0 + REST Assured
+    testImplementation 'org.springframework.restdocs:spring-restdocs-restassured'
+    testImplementation "com.epages:restdocs-api-spec-restassured:${restdocsApiSpecVersion}"
+    testImplementation 'io.rest-assured:rest-assured'
 
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
     testImplementation 'org.springframework.security:spring-security-test'
@@ -77,12 +91,16 @@ dependencies {
     testImplementation "org.testcontainers:junit-jupiter:1.19.0"
 }
 
-tasks.named('test') {
-    outputs.dir snippetsDir
-    useJUnitPlatform()
+tasks.register('openapi3Generate') {
+    dependsOn openapi3
+    delete('src/main/resources/static/swagger-ui/openapi3.yaml')
+    copy {
+        from(layout.buildDirectory.dir("api-spec").get().file("openapi3.yaml"))
+        into 'src/main/resources/static/swagger-ui'
+        rename { 'openapi3.yaml' }
+    }
 }
 
-tasks.named('asciidoctor') {
-    inputs.dir snippetsDir
-    dependsOn test
+tasks.named('test') {
+    useJUnitPlatform()
 }

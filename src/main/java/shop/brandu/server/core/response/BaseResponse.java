@@ -1,23 +1,29 @@
 package shop.brandu.server.core.response;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.gson.Gson;
 import lombok.Getter;
-import org.springframework.validation.Errors;
+import lombok.ToString;
 
+import java.util.ArrayList;
+import java.util.List;
+
+@ToString
 @Getter
 public abstract class BaseResponse<T> {
+    @Getter(onMethod_ = @JsonProperty("isSuccess"))
     private final boolean isSuccess;
     private final int code;
     private final String message;
     protected T data;
-    protected Errors errors;
+    protected List<CustomError> errors;
 
     public BaseResponse(boolean isSuccess, int code, String message) {
         this.isSuccess = isSuccess;
         this.code = code;
         this.message = message;
         this.data = null;
-        this.errors = null;
+        this.errors = new ArrayList<>();
     }
 
     public String toJson() {

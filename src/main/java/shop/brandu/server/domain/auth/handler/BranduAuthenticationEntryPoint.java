@@ -22,6 +22,7 @@ public class BranduAuthenticationEntryPoint implements AuthenticationEntryPoint 
         }
         ErrorResponse errorResponse = new ErrorResponse(exception, request.getAttribute("error-message").toString());
         response.setContentType("application/json;charset=UTF-8");
+        System.out.println(errorResponse);
         response.getWriter().write(errorResponse.toJson());
     }
 }

@@ -6,6 +6,7 @@ import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
+import org.springframework.validation.Errors;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import shop.brandu.server.core.annotation.CurrentUser;
@@ -38,8 +39,13 @@ public class AuthController {
     @ResponseStatus(value = HttpStatus.OK)
     public SuccessResponse<JwtToken> signIn(
             @RequestBody @Validated SignIn signIn,
+            Errors errors,
             HttpServletResponse response
     ) {
+        if (errors.hasErrors()) {
+            throw new BranduException(ErrorCode.INVALID_INPUT_VALUE, errors);
+        }
+        
         JwtToken token = authService.signIn(signIn);
         response.addCookie(createCookie(token));
         return SuccessResponse.of(token);
@@ -56,8 +62,12 @@ public class AuthController {
     @ResponseStatus(value = HttpStatus.CREATED)
     public SuccessResponse<Void> signUp(
             @RequestBody @Validated SignUp signUp,
-            HttpServletResponse response
+            Errors errors
     ) {
+        if (errors.hasErrors()) {
+            throw new BranduException(ErrorCode.INVALID_INPUT_VALUE, errors);
+        }
+
         authService.signUp(signUp);
         return SuccessResponse.empty();
     }
@@ -91,8 +101,13 @@ public class AuthController {
     @PostMapping("/find-password")
     @ResponseStatus(value = HttpStatus.OK)
     public SuccessResponse<Void> findPassword(
-            @RequestBody @Validated FindPassword findPassword
+            @RequestBody @Validated FindPassword findPassword,
+            Errors errors
     ) {
+        if (errors.hasErrors()) {
+            throw new BranduException(ErrorCode.INVALID_INPUT_VALUE, errors);
+        }
+
         authService.findPassword(findPassword.getEmail());
         return SuccessResponse.empty();
     }
@@ -108,21 +123,30 @@ public class AuthController {
     @GetMapping("/confirm")
     @ResponseStatus(value = HttpStatus.OK)
     public SuccessResponse<Void> confirm(
-            @RequestParam("type") String type,
-            @RequestParam("email") String email,
-            @RequestParam("code") String code
+            @RequestBody @Validated Confirm confirm,
+            Errors errors
     ) {
-        if (!authService.confirm(type, email, code)) {
+        if (errors.hasErrors()) {
+            throw new BranduException(ErrorCode.INVALID_INPUT_VALUE, errors);
+        }
+
+        if (!authService.confirm(confirm)) {
             throw new IllegalArgumentException("인증 코드가 일치하지 않습니다.");
         }
+
         return SuccessResponse.empty();
     }
 
     @PostMapping("/resend-email")
     @ResponseStatus(value = HttpStatus.OK)
     public SuccessResponse<Void> resendEmail(
-            @RequestBody @Validated ResendEmail resendEmail
+            @RequestBody @Validated ResendEmail resendEmail,
+            Errors errors
     ) {
+        if (errors.hasErrors()) {
+            throw new BranduException(ErrorCode.INVALID_INPUT_VALUE, errors);
+        }
+
         authService.resendEmail(resendEmail.getEmail(), resendEmail.getType());
         return SuccessResponse.empty();
     }
